@@ -5,11 +5,11 @@ import time
 Data_loc = './Data/Data_vids'
 
 number_of_gestures = 3
-video_number = 5
+video_number = 100
 
 waiting_time = 5
 
-video_length = 30
+video_length = 20
 fps = 60
 frame_count = video_length * fps
 
