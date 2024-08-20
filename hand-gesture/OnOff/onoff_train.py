@@ -7,7 +7,7 @@ import pickle
 import h5py
 import numpy as np
 
-with h5py.File('./fist_gesture_features.h5', 'r') as f:
+with h5py.File('../Data/OnOff_features/fist_gesture_features.h5', 'r') as f:
     X_onoff = f['features'][:]
     y_onoff = f['labels'][:]
 
