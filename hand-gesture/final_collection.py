@@ -37,7 +37,7 @@ def setup_directories(gesture_type, selected_gesture):
         fps = 60
 
     elif gesture_type == 2:
-        Data_loc = './Data/Data_vids/Circle_gesture_data'
+        Data_loc = './Data/Data_vids/Circles'
         waiting_time = 3
         video_length = 2
         fps = 60

@@ -3,6 +3,13 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="\hand-gesture\Data\OnOff_features\fist_gesture_features.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\hand-gesture\Data\finger_circle_features.csv">
           <value>
             <Attribute>
