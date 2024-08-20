@@ -2,17 +2,24 @@ import xgboost as xgb
 import numpy as np
 import h5py
 
-with h5py.File('../Data/combined_features.h5', 'r') as f:
-    X = f['X'][:]
-    y = f['y'][:]
+with h5py.File('./Data/combined_gesture_features.h5', 'r') as f:
+    print("Datasets in the file:")
+    print(list(f.keys()))
+
+    combined_features = f['combined_features']
+    print("Keys in 'combined_features':")
+    print(list(combined_features.keys()))
+
+    X = combined_features['X'][:]
+    y = combined_features['y'][:]
 
 dtrain = xgb.DMatrix(X, label=y)
 
 param_rf = {
-    'max_depth': 10,
+    'max_depth': 100,
     'eta': 0.1,
     'nthread': 4,
-    'num_parallel_tree': 100,
+    'num_parallel_tree': 1000,
     'subsample': 0.8,
     'colsample_bytree': 0.8,
     'objective': 'binary:logistic',
@@ -21,9 +28,9 @@ param_rf = {
 }
 
 param_gb = {
-    'max_depth': 6,
+    'max_depth': 50,
     'eta': 0.1,
-    'nthread': 4,
+    'nthread': 25,
     'subsample': 0.8,
     'colsample_bytree': 0.8,
     'objective': 'binary:logistic',
@@ -33,9 +40,9 @@ param_gb = {
 }
 
 param_eb = {
-    'max_depth': 8,
+    'max_depth': 60,
     'eta': 0.05,
-    'nthread': 4,
+    'nthread': 25,
     'subsample': 0.8,
     'colsample_bytree': 0.8,
     'objective': 'binary:logistic',

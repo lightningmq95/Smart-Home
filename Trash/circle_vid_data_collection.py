@@ -4,9 +4,9 @@ import time
 
 Data_loc = '../Data/Data_vids/Circle_gesture_data'
 number_of_gestures = 2
-video_number = 100
-waiting_time = 5
-video_length = 20
+video_number = 175
+waiting_time = 4
+video_length = 4
 fps = 60
 frame_count = video_length * fps
 
