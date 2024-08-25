@@ -1,0 +1,3 @@
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 126. Discarding old audio chunks.
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() iterable argument is empty
+RealTimeSTT: root - ERROR - Unhandled exeption in _recording_worker: PeekNamedPipe() argument 1 must be int, not None

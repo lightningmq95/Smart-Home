@@ -2,6 +2,9 @@ from RealtimeSTT import AudioToTextRecorder
 from colorama import Fore, Back, Style
 import colorama
 import os
+from difflib import get_close_matches
+from fuzzy import Soundex
+
 
 if __name__ == '__main__':
 
@@ -12,8 +15,29 @@ if __name__ == '__main__':
     full_sentences = []
     displayed_text = ""
 
+    valid_commands = ["lights on", "lights off", "fans on", "fans off"]
+    soundex = Soundex(4)
+
+
     def clear_console():
         os.system('clear' if os.name == 'posix' else 'cls')
+
+    def is_ascii(s):
+        return all(ord(c) < 128 for c in s)
+
+    def find_closest_command(text):
+            
+        matches = get_close_matches(text, valid_commands, n=1, cutoff=0.6)
+        return matches[0] if matches else text
+    
+    def find_closest_command(text):
+        if not is_ascii(text):
+            return text
+        text_soundex = soundex(text)
+        matches = [(command, soundex(command)) for command in valid_commands]
+        closest_match = min(matches, key=lambda x: abs(len(text_soundex) - len(x[1])))
+        return closest_match[0] if closest_match else text
+
 
     def text_detected(text):
         global displayed_text
@@ -30,7 +54,8 @@ if __name__ == '__main__':
             print(displayed_text, end="", flush=True)
 
     def process_text(text):
-        full_sentences.append(text)
+        corrected_text = find_closest_command(text)
+        full_sentences.append(corrected_text)
         text_detected("")
 
     recorder_config = {
