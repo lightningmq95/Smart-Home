@@ -8,7 +8,7 @@ import fuzzy
 import Levenshtein
 
 # Gemini API configuration
-API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"
+API_KEY = ""
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
