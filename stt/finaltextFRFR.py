@@ -83,7 +83,7 @@ def process_text(text):
             print(f"\nError: {str(e)}")
 
 if __name__ == '__main__':
-    print("Initializing Realtime STT with Gemini integration...")
+    print("Initializing")
     colorama.init()
 
     full_sentences = []
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     recorder = AudioToTextRecorder(**recorder_config)
 
     clear_console()
-    print("Say something...", end="", flush=True)
+    print("Say something", end="", flush=True)
 
     while True:
         current_time = time.time()
