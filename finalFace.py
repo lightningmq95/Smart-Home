@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw
 import os
 import cv2
 import time
+import json
 
 mtcnn = MTCNN(image_size=240, margin=0, min_face_size=20) # initializing mtcnn for face detection
 resnet = InceptionResnetV1(pretrained='vggface2').eval() # initializing resnet for face img to embeding conversion
@@ -70,7 +71,7 @@ def face_match(data_path):
         return (name_list[idx_min], min_dist, img)
 
 # Function to register a new user
-def register_user(name):
+def register_user(name, role):
     user_folder = os.path.join('database', name)
     os.makedirs(user_folder, exist_ok=True)
     
@@ -113,6 +114,12 @@ def register_user(name):
         img.save(os.path.join(user_folder, f'{name}_{i+1}.jpg'))        
         # time.sleep(5)
 
+    # Save user info in JSON file
+    user_info = {"name": name, "role": role}
+    with open('users.json', 'a') as f:
+        f.write(json.dumps(user_info) + '\n')
+        # f.write('\n')
+
 # Function to train the model with the new dataset
 def train_model():
     dataset = datasets.ImageFolder('database')
@@ -133,41 +140,49 @@ def train_model():
     data = [embedding_list, name_list]
     torch.save(data, 'data.pt')
 
+# Function to check for owner's presence
+def check_owner():
+    result = face_match('data.pt')
+    if result[0] == "Unknown" or result[0] == "No face detected":
+        return False
+    with open('users.json', 'r') as f:
+        users = [json.loads(line) for line in f if line.strip()]
+    for user in users:
+        if user['name'] == result[0] and user['role'] == 'owner':
+            return True
+    return False
+
 # Match face using webcam image
 result = face_match('data.pt')
-# # Draw bounding box on the image
-# img = result[2]
-# boxes, _ = mtcnn.detect(img)
-# if boxes is not None:
-#     draw = ImageDraw.Draw(img)
-#     for box in boxes:
-#         draw.rectangle(box.tolist(), outline=(255, 0, 0), width=2)
-# img.show()
-
 if result[0] == "Unknown":
     print('Face is unknown with distance:', result[1])
     register = input("Do you want to register? (yes/no): ")
     if register.lower() == 'yes':
         name = input("Enter your name: ")
-        register_user(name)
+        register_user(name, "pending")
         train_model()
-        result = face_match('data.pt')
-        if result[0] == "Unknown":
-            print('Face is still unknown with distance:', result[1])
+        print("Owner required for role assignment. Capturing Owner's photo")
+        if check_owner():
+            role = input("Enter the role for the new user (owner/member/maid): ")
+            with open('users.json', 'r') as f:
+                users = [json.loads(line) for line in f if line.strip()]
+            for user in users:
+                if user['name'] == name:
+                    user['role'] = role
+            with open('users.json', 'w') as f:
+                for user in users:
+                    f.write(json.dumps(user) + '\n')
+                    # f.write('\n')
         else:
-            print('Face matched with:', result[0], 'With distance:', result[1])
+            print("Owner not detected. Cannot assign role.")
 elif result[0] == "No face detected":
     print('No face detected in the captured image.')
 else:
-    print('Face matched with:', result[0], 'With distance:', result[1])
-
-# # Draw bounding box on the image
-# img = result[2]
-# boxes, _ = mtcnn.detect(img)
-# if boxes is not None:
-#     draw = ImageDraw.Draw(img)
-#     for box in boxes:
-#         draw.rectangle(box.tolist(), outline=(255, 0, 0), width=2)
-
-# # Display the image with bounding box
-# img.show()
+    with open('users.json', 'r') as f:
+        users = [json.loads(line) for line in f]
+    for user in users:
+        if user['name'] == result[0]:
+            print(f"User: {user['name']}")
+            print(f"Role: {user['role']}")
+            print(f"Distance: {result[1]}")
+            break
