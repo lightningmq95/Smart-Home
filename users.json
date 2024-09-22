@@ -1,2 +1,10 @@
-{"name": "Akash", "role": "owner"}
-{"name": "Gajjar", "role": "Member"}
+[
+    {
+        "name": "Akash",
+        "role": "owner"
+    },
+    {
+        "name": "Gajjar",
+        "role": "Member"
+    }
+]
