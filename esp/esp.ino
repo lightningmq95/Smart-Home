@@ -7,8 +7,8 @@ const int enablePin = 14; // Motor EN connected to GPIO 14
 const int ledPin = 12;    // LED connected to GPIO 12
 
 // Wi-Fi credentials
-const char* ssid = "Your_SSID";
-const char* password = "Your_PASSWORD";
+const char *ssid = "Your_SSID";
+const char *password = "Your_PASSWORD";
 
 // Web server on port 80
 WiFiServer server(80);
@@ -28,7 +28,8 @@ void setup() {
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -41,10 +42,12 @@ void setup() {
   server.begin();
 }
 
-void loop() {
+void loop()
+{
   // Check if a client has connected
   WiFiClient client = server.available();
-  if (client) {
+  if (client)
+  {
     Serial.println("New Client connected");
     String request = client.readStringUntil('\r');
     Serial.println("Request: " + request);
