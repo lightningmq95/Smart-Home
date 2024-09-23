@@ -1,14 +1,33 @@
-#include <ESP8266WiFi.h>
+#include <Arduino.h>
+
+/* ESP32 HTTP IoT Server Example for Wokwi.com
+
+  https://wokwi.com/arduino/projects/320964045035274834
+
+  When running it on Wokwi for VSCode, you can connect to the
+  simulated ESP32 server by opening http://localhost:8180
+  in your browser. This is configured by wokwi.toml.
+*/
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WebServer.h>
+#include <uri/UriBraces.h>
 
 // Define motor and LED control pins
 const int motorPin1 = 5;  // Motor IN1 connected to GPIO 5
 const int motorPin2 = 4;  // Motor IN2 connected to GPIO 4
 const int enablePin = 14; // Motor EN connected to GPIO 14
-const int ledPin = 12;    // LED connected to GPIO 12
+const int ledPin = 2;     // LED connected to GPIO 12
+
+// PWM channel, frequency, and resolution
+const int pwmChannel = 0;
+const int pwmFreq = 5000;
+const int pwmResolution = 8;
 
 // Wi-Fi credentials
-const char *ssid = "Your_SSID";
-const char *password = "Your_PASSWORD";
+const char *ssid = "Wokwi-GUEST";
+const char *password = "";
 
 // Web server on port 80
 WiFiServer server(80);
@@ -26,6 +45,10 @@ void setup()
   pinMode(motorPin2, OUTPUT);
   pinMode(enablePin, OUTPUT);
   pinMode(ledPin, OUTPUT);
+
+  // Configure PWM channel
+  ledcSetup(pwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(motorPin1, pwmChannel);
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -71,36 +94,53 @@ void loop()
     {
       int index = request.indexOf("MOTOR=") + 6;
       String speedString = request.substring(index);
-
+      int endIndex = speedString.indexOf(' ');
+      if (endIndex != -1)
+      {
+        speedString = speedString.substring(0, endIndex);
+      }
+      speedString.trim(); // Remove any leading/trailing whitespace
+      Serial.println("Parsed speedString: '" + speedString + "'");
+      // Adjust motor speed based on the received value
       // Adjust motor speed based on the received value
       if (speedString == "1")
       {
         currentSpeed = 1.0; // Max speed
+        Serial.println("Setting motor speed to max (1.0)");
       }
       else if (speedString == "0")
       {
         currentSpeed = 0.0; // Motor off
+        Serial.println("Turning motor off (0.0)");
       }
       else if (speedString == "FASTER")
       {
         currentSpeed += 0.2; // Increase speed
         if (currentSpeed > 1.0)
           currentSpeed = 1.0; // Clamp to max speed
+        Serial.println("Increasing motor speed");
       }
       else if (speedString == "SLOWER")
       {
         currentSpeed -= 0.2; // Decrease speed
         if (currentSpeed < 0.0)
           currentSpeed = 0.0; // Clamp to min speed
+        Serial.println("Decreasing motor speed");
+      }
+      else
+      {
+        Serial.println("Invalid motor speed command");
       }
 
       // Map the speed value (0.0 to 1.0) to PWM range (0 to 255)
       int pwmValue = int(currentSpeed * 255);
 
-      // Set motor direction and speed
-      digitalWrite(motorPin1, HIGH); // Set direction
-      digitalWrite(motorPin2, LOW);  // Set direction
-      analogWrite(enablePin, pwmValue);
+      // // Set motor direction and speed
+      // digitalWrite(motorPin1, HIGH); // Set direction
+      // digitalWrite(motorPin2, LOW);  // Set direction
+      // analogWrite(enablePin, pwmValue);
+      // analogWrite(motorPin1, pwmValue);
+      ledcWrite(pwmChannel, pwmValue);
 
       Serial.print("Motor speed set to: ");
       Serial.println(currentSpeed * 100); // Show as percentage

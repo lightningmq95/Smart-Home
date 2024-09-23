@@ -184,3 +184,4 @@ async def face_match(image: UploadFile = File(...)):
         return {"name": "Unknown", "distance": min_dist}
     else:
         return {"name": name, "role": role , "distance": min_dist}
+    
