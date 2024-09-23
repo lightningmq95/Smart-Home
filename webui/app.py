@@ -1,61 +1,87 @@
 import streamlit as st
 import requests
 
-# Function to check login credentials
-def check_login(username, password):
-    return username == "admin" and password == "admin"
+def go_next(view):
+    if view == "front":
+        st.session_state.front_view = st.session_state["front_view_input"]
+        next_step = 2
+    elif view == "left":
+        st.session_state.left_view = st.session_state["left_view_input"]
+        next_step = 3
+    elif view == "right":
+        st.session_state.right_view = st.session_state["right_view_input"]
+        next_step = 4
+        st.session_state.images_ready = True
 
-# Callback functions to update session state and move to the next step
-def go_next_front():
-    st.session_state.front_view = st.session_state["front_view_input"]
     if st.session_state.recapture:
         st.session_state.images_ready = True
         st.session_state.capturing = False
         st.session_state.recapture = False
     else:
-        st.session_state.step = 2
+        st.session_state.step = next_step
 
-def go_next_left():
-    st.session_state.left_view = st.session_state["left_view_input"]
-    if st.session_state.recapture:
-        st.session_state.images_ready = True
-        st.session_state.capturing = False
-        st.session_state.recapture = False
-    else:
-        st.session_state.step = 3
-
-def go_next_right():
-    st.session_state.right_view = st.session_state["right_view_input"]
-    if st.session_state.recapture:
-        st.session_state.images_ready = True
-        st.session_state.capturing = False
-        st.session_state.recapture = False
-    else:
-        st.session_state.step = 4
-        st.session_state.images_ready = True
-
-# Function to capture images in sequence
-def capture_images():
-    if "step" not in st.session_state:
+def change_view(view):
+    if view == "front":
         st.session_state.step = 1
+    elif view == "left":
+        st.session_state.step = 2
+    elif view == "right":
+        st.session_state.step = 3
+    st.session_state.capturing = True
+    st.session_state.images_ready = False
+    st.session_state.recapture = True
 
-    if st.session_state.step == 1:
-        st.write("Please capture the front view:")
-        st.camera_input("Capture Front View", key="front_view_input", on_change=go_next_front)
+def submit_images():
+    # Make API call here
+    files = [
+        ('images', ('front_view.jpg', st.session_state.front_view.getvalue(), 'image/jpeg')),
+        ('images', ('left_view.jpg', st.session_state.left_view.getvalue(), 'image/jpeg')),
+        ('images', ('right_view.jpg', st.session_state.right_view.getvalue(), 'image/jpeg'))
+    ]
+    data = {
+        'name': st.session_state.person_name,
+        'role': st.session_state.role  
+    }
+    response = requests.post('http://127.0.0.1:8000/register_user', files=files, data=data)
+    if response.status_code == 200:
+        st.success("Images submitted successfully!")
+    else:
+        st.error("Failed to submit images.")
+    # Reset the state for the next capture
+    st.session_state.capturing = False
+    st.session_state.images_ready = False
 
-    elif st.session_state.step == 2:
-        st.write("Please capture the left view:")
-        st.camera_input("Capture Left View", key="left_view_input", on_change=go_next_left)
+def start_capturing(person_name, role):
+    if person_name:
+        st.session_state.person_name = person_name
+        st.session_state.role = role
+        st.session_state.capturing = True
+        st.session_state.images_ready = False
+        st.session_state.step = 1
+    else:
+        st.warning("Please enter the person's name")
 
-    elif st.session_state.step == 3:
-        st.write("Please capture the right view:")
-        st.camera_input("Capture Right View", key="right_view_input", on_change=go_next_right)
+def change_password(old_password, new_password):
+    response = requests.post('http://127.0.0.1:8000/change_password', data={'username': st.session_state.username, 'old_password': old_password, 'new_password': new_password})
+    if response.status_code == 200:
+        st.success("Password changed successfully!")
+    else:
+        st.error("Failed to change password. Please check your old password.")
+
+@st.dialog("Change Password")
+def show_change_password_modal():
+    old_password = st.text_input("Old Password", type="password")
+    new_password = st.text_input("New Password", type="password")
+    st.button("Submit", on_click=change_password, args=(old_password, new_password))
+
 
 # Initialize session state variables
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "person_name" not in st.session_state:
     st.session_state.person_name = ""
+if "role" not in st.session_state:
+    st.session_state.role = "owner"
 if "capturing" not in st.session_state:
     st.session_state.capturing = False
 if "images_ready" not in st.session_state:
@@ -71,6 +97,17 @@ if "right_view" not in st.session_state:
 if "recapture" not in st.session_state:
     st.session_state.recapture = False
 
+role_list = ['owner', 'member']
+
+def login(username, password):
+    response = requests.post('http://127.0.0.1:8000/login', data={'username': username, 'password': password})
+    if response.status_code == 200:
+        st.session_state.logged_in = True
+        st.session_state.username = username
+        st.success("Logged in successfully!")
+    else:
+        st.error("Invalid username or password")
+
 # Main function
 def main():
     st.title("Person Image Capture")
@@ -81,71 +118,47 @@ def main():
         st.subheader("Login")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        if st.button("Login"):
-            if check_login(username, password):
-                st.session_state.logged_in = True
-                st.success("Logged in successfully!")
-            else:
-                st.error("Invalid username or password")
+        st.button("Login", on_click=login, args=(username, password))
+
     else:
+        st.button("Change Password", on_click=show_change_password_modal)
+
         # Form to enter person's name
         st.subheader("Enter Person's Name")
         person_name = st.text_input("Person's Name", value=st.session_state.person_name)
-        if st.button("Start Capturing"):
-            if person_name:
-                st.session_state.person_name = person_name
-                st.session_state.capturing = True
-                st.session_state.images_ready = False
-                st.session_state.step = 1
-            else:
-                st.warning("Please enter the person's name")
+        role = st.selectbox("Select Role", role_list, index=role_list.index(st.session_state.role))
+
+        st.button("Start Capturing", on_click=start_capturing, args=(person_name, role))
 
         if st.session_state.capturing:
-            capture_images()
+            if "step" not in st.session_state:
+                st.session_state.step = 1
+
+            if st.session_state.step == 1:
+                st.write("Please capture the front view:")
+                st.camera_input("Capture Front View", key="front_view_input", on_change=go_next, args=("front",))
+
+            elif st.session_state.step == 2:
+                st.write("Please capture the left view:")
+                st.camera_input("Capture Left View", key="left_view_input", on_change=go_next, args=("left",))
+
+            elif st.session_state.step == 3:
+                st.write("Please capture the right view:")
+                st.camera_input("Capture Right View", key="right_view_input", on_change=go_next, args=("right",))
 
         if st.session_state.images_ready:
             st.subheader("Preview Captured Images")
+
             st.image(st.session_state.front_view, caption="Front View")
-            if st.button("Change Front View"):
-                st.session_state.step = 1
-                st.session_state.capturing = True
-                st.session_state.images_ready = False
-                st.session_state.recapture = True
+            st.button("Change Front View", on_click=change_view, args=("front",))
 
             st.image(st.session_state.left_view, caption="Left View")
-            if st.button("Change Left View"):
-                st.session_state.step = 2
-                st.session_state.capturing = True
-                st.session_state.images_ready = False
-                st.session_state.recapture = True
+            st.button("Change Left View", on_click=change_view, args=("left",))
 
             st.image(st.session_state.right_view, caption="Right View")
-            if st.button("Change Right View"):
-                st.session_state.step = 3
-                st.session_state.capturing = True
-                st.session_state.images_ready = False
-                st.session_state.recapture = True
+            st.button("Change Right View", on_click=change_view, args=("right",))
             
-            if st.button("Submit"):
-                # Make API call here
-                files = [
-                    ('images', ('front_view.jpg', st.session_state.front_view.getvalue(), 'image/jpeg')),
-                    ('images', ('left_view.jpg', st.session_state.left_view.getvalue(), 'image/jpeg')),
-                    ('images', ('right_view.jpg', st.session_state.right_view.getvalue(), 'image/jpeg'))
-                ]
-                data = {
-                    'name': st.session_state.person_name,
-                    'role': 'owner'  # or any other role you want to set
-                }
-                response = requests.post('http://127.0.0.1:8000/register_user', files=files, data=data)
-                if response.status_code == 200:
-                    st.success("Images submitted successfully!")
-                else:
-                    st.error("Failed to submit images.")
-                # Reset the state for the next capture
-                # Reset the state for the next capture
-                st.session_state.capturing = False
-                st.session_state.images_ready = False
+            st.button("Submit", on_click=submit_images)
 
 if __name__ == "__main__":
     main()

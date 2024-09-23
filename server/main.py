@@ -1,62 +1,22 @@
-# from typing import Union, List
-
-# from fastapi import FastAPI, UploadFile, File
-# from fastapi.middleware.cors import CORSMiddleware
-
-# from pydantic import BaseModel
-# from PIL import Image
-# import json
-# import os
-# import numpy as np
-# import cv2
-
-# app = FastAPI()
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=['*'],
-#     allow_credentials=True,
-#     allow_methods=['*'],
-#     allow_headers=['*'],
-# )
-
-# class UserRegistration(BaseModel):
-#     name: str
-#     role: str
-#     images: List[UploadFile]
-
-# @app.post("/register_user")
-# async def register_user(user: UserRegistration):
-#     user_folder = os.path.join('database', user.name)
-#     os.makedirs(user_folder, exist_ok=True)
-    
-#     for i, image in enumerate(user.images):
-#         contents = await image.read()
-#         nparr = np.frombuffer(contents, np.uint8)
-#         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-#         # Convert the captured frame to a PIL image
-#         img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-#         img.save(os.path.join(user_folder, f'{user.name}_{i+1}.jpg'))
-
-#     # Save user info in JSON file
-#     user_info = {"name": user.name, "role": user.role}
-#     with open('users.json', 'a') as f:
-#         f.write(json.dumps(user_info) + '\n')
-
-#     return {"message": "User registered successfully"}
-
 from typing import List
-from fastapi import FastAPI, UploadFile, File, Form
+from facenet_pytorch import MTCNN, InceptionResnetV1
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from torchvision import datasets
+from torch.utils.data import DataLoader
 from PIL import Image
 import json
 import os
 import numpy as np
 import cv2
+import torch
+import bcrypt
 
 app = FastAPI()
+mtcnn = MTCNN(image_size=240, margin=0, min_face_size=20) # initializing mtcnn for face detection
+resnet = InceptionResnetV1(pretrained='vggface2').eval() # initializing resnet for face img to embeding conversion
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,6 +25,76 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+# Path to the credentials file
+CREDENTIALS_FILE = 'credentials.json'
+
+# Function to load credentials
+def load_credentials():
+    if not os.path.exists(CREDENTIALS_FILE):
+        return {}
+    with open(CREDENTIALS_FILE, 'r') as f:
+        return json.load(f)
+    
+# Function to save credentials
+def save_credentials(credentials):
+    with open(CREDENTIALS_FILE, 'w') as f:
+        json.dump(credentials, f, indent=4)
+
+# Function to hash a password
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+# Function to check login credentials
+def check_login(username, password):
+    credentials = load_credentials()
+    if username in credentials:
+        hashed_password = credentials[username]
+        return bcrypt.checkpw(password.encode(), hashed_password.encode())
+    return False
+
+# Function to change password
+def change_password(username, old_password, new_password):
+    if check_login(username, old_password):
+        credentials = load_credentials()
+        credentials[username] = hash_password(new_password)
+        save_credentials(credentials)
+        return True
+    return False
+
+# Function to train the model with the new dataset
+def train_model():
+    dataset = datasets.ImageFolder('database')
+    idx_to_class = {i: c for c, i in dataset.class_to_idx.items()}
+    
+    loader = DataLoader(dataset, collate_fn=lambda x: x[0])
+    
+    embedding_list = []
+    name_list = []
+    
+    for img, idx in loader:
+        face, prob = mtcnn(img, return_prob=True)
+        if face is not None and prob > 0.90:
+            emb = resnet(face.unsqueeze(0)).detach()
+            embedding_list.append(emb)
+            name_list.append(idx_to_class[idx])
+    
+    data = [embedding_list, name_list]
+    torch.save(data, 'data.pt')
+
+@app.post("/login")
+async def login(username: str = Form(...), password: str = Form(...)):
+    if check_login(username, password):
+        return {"message": "Login successful"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+@app.post("/change_password")
+async def change_password_api(username: str = Form(...), old_password: str = Form(...), new_password: str = Form(...)):
+    if change_password(username, old_password, new_password):
+        return {"message": "Password changed successfully"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
 
 @app.post("/register_user")
 async def register_user(
@@ -107,5 +137,50 @@ async def register_user(
         # Write the updated list back to the file
         with open('users.json', 'w') as f:
             json.dump(users, f, indent=4)
-
+    train_model()
     return {"message": "User registered successfully"}
+
+@app.post("/face_match")
+async def face_match(image: UploadFile = File(...)):
+    contents = await image.read()
+    nparr = np.frombuffer(contents, np.uint8)
+    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # Convert the captured frame to a PIL image
+    img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    
+    # Path to the data file
+    data_path = 'path/to/data.pt'
+    
+    # getting embedding matrix of the given img
+    face, prob = mtcnn(img, return_prob=True)  # returns cropped face and probability
+    if face is None or prob <= 0.90:
+        return {"name": "No face detected", "distance": None}
+
+    emb = resnet(face.unsqueeze(0)).detach()  # detech is to make required gradient false
+
+    saved_data = torch.load(data_path)  # loading data.pt file
+    embedding_list = saved_data[0]  # getting embedding data
+    name_list = saved_data[1]  # getting list of names
+
+    dist_list = []  # list of matched distances, minimum distance is used to identify the person
+
+    for idx, emb_db in enumerate(embedding_list):
+        dist = torch.dist(emb, emb_db).item()
+        dist_list.append(dist)
+
+    idx_min = dist_list.index(min(dist_list))
+    min_dist = min(dist_list)
+    name = name_list[idx_min]
+
+    with open('users.json', 'r') as f:
+        users = [json.loads(line) for line in f]
+    for user in users:
+        if user['name'] == name:
+            role = user['role']
+            break
+    
+    if min_dist > 0.8:
+        return {"name": "Unknown", "distance": min_dist}
+    else:
+        return {"name": name, "role": role , "distance": min_dist}
