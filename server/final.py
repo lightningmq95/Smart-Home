@@ -14,6 +14,7 @@ import Levenshtein
 import pyttsx3
 import pyaudio
 import webrtcvad
+import logging
 
 urlFacematch = "http://127.0.0.1:8000/face_match"
 urlLedOn = "http://localhost:8180/LED=1"
@@ -31,8 +32,6 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 soundex = fuzzy.Soundex(4)
 
 commands = ["lights on", "lights off", "fan faster", "fan slower", "fan on", "fan off"]
-
-current_motor_speed = 0.0
 
 command_urls = {
     "lights on": urlLedOn,
@@ -83,7 +82,7 @@ def text_detected(text):
         print(displayed_text, end="", flush=True)
 
 def process_text(text):
-    global processed_text, current_motor_speed
+    global processed_text
     if text not in processed_text:
         full_sentences.append(text)
         processed_text.add(text)
@@ -99,12 +98,8 @@ def process_text(text):
         if distance <= threshold and min_length <= len(text) <= max_length:
             print(f"Detected command: {closest_command}")
             # Handle the command here (e.g., control lights, fan, etc.)
-            if closest_command == "fan faster":
-                current_motor_speed = min(current_motor_speed + 0.2, 1.0)
-                url = f"http://localhost:8180/MOTOR={current_motor_speed}"
-            elif closest_command == "fan slower":
-                current_motor_speed = max(current_motor_speed - 0.2, 0.0)
-                url = f"http://localhost:8180/MOTOR={current_motor_speed}"
+            if closest_command in ["fan faster", "fan slower"]:
+                url = command_urls.get(closest_command)
             else:
                 url = command_urls.get(closest_command)
 
