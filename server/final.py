@@ -12,6 +12,8 @@ import time
 import fuzzy
 import Levenshtein
 import pyttsx3
+import pyaudio
+import webrtcvad
 
 urlFacematch = "http://127.0.0.1:8000/face_match"
 urlLedOn = "http://localhost:8180/LED=1"
@@ -42,7 +44,7 @@ command_urls = {
 }
 
 def find_closest_command(recognized_text):
-    recognized_soundex = soundex(recognized_text)
+    recognized_soundex = soundex(recognized_text.lower())
     print(f"Recognized text: '{recognized_text}', Soundex: {recognized_soundex}")
     
     potential_commands = [command for command in commands if soundex(command) == recognized_soundex]
@@ -88,7 +90,7 @@ def process_text(text):
         text_detected("")
         
         closest_command, distance = find_closest_command(text)
-        threshold = 8  
+        threshold = 12  
         min_length = 2
         max_length = 50  
 
@@ -145,7 +147,7 @@ def STT():
     recorder_config = {
         'spinner': False,
         'model': 'base',
-        'silero_sensitivity': 0.5,
+        'silero_sensitivity': 0.7,
         'webrtc_sensitivity': 3,
         'post_speech_silence_duration': 0.5,
         'min_length_of_recording': 0,

@@ -78,12 +78,12 @@ void loop()
     client.flush();
 
     // Handle LED control
-    if (request.indexOf("/LED=ON") != -1)
+    if (request.indexOf("/LED=1") != -1)
     {
       digitalWrite(ledPin, HIGH);
       Serial.println("LED is ON");
     }
-    else if (request.indexOf("/LED=OFF") != -1)
+    else if (request.indexOf("/LED=0") != -1)
     {
       digitalWrite(ledPin, LOW);
       Serial.println("LED is OFF");
