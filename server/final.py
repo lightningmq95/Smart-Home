@@ -31,7 +31,7 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 soundex = fuzzy.Soundex(4)
 
-commands = ["lights on", "lights off", "fan faster", "fan slower", "fan on", "fan off"]
+commands = ["jarvis lights on", "jarvis lights off", "jarvis fan faster", "jarvis fan slower", "jarvis fan on", "jarvis fan off"]
 
 command_urls = {
     "lights on": urlLedOn,
@@ -128,6 +128,9 @@ def process_text(text):
         except Exception as e:
             print(f"\nError: {str(e)}")
 
+def keyword_detected(text):
+    return "jarvis" in text.lower()
+
 def STT():
     print("Initializing")
     colorama.init()
@@ -157,7 +160,7 @@ def STT():
     recorder = AudioToTextRecorder(**recorder_config)
 
     clear_console()
-    print("Say something", end="", flush=True)
+    print("Say 'Jarvis' to start transcribing", end="", flush=True)
 
     while True:
         current_time = time.time()
@@ -170,7 +173,7 @@ def STT():
             # Reset the list of sentences
             full_sentences.clear()
         
-        recorder.text(process_text)
+        recorder.text(lambda text: process_text(text) if keyword_detected(text) else None)
         
         # Update the last input time
         if full_sentences:

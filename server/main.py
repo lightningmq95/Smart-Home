@@ -15,7 +15,7 @@ import bcrypt
 
 app = FastAPI()
 mtcnn = MTCNN(image_size=240, margin=0, min_face_size=20) # initializing mtcnn for face detection
-resnet = InceptionResnetV1(pretrained='vggface2').eval() # initializing resnet for face img to embeding conversion
+resnet = InceptionResnetV1(pretrained='vggface2').eval() # initializing resnet for face img to embedding conversion
 
 
 app.add_middleware(
