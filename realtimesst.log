@@ -181,3 +181,54 @@ RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is
 RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
 RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 12. Discarding old audio chunks.
 RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 25. Discarding old audio chunks.
+RealTimeSTT: root - ERROR - Error initializing Silero VAD voice activity detection engine: Remote end closed connection without response
+Traceback (most recent call last):
+  File "D:\Softwares\Anaconda\envs\dev\lib\site-packages\RealtimeSTT\audio_recorder.py", line 629, in __init__
+    self.silero_vad_model, _ = torch.hub.load(
+  File "D:\Softwares\Anaconda\envs\dev\lib\site-packages\torch\hub.py", line 565, in load
+    repo_or_dir = _get_cache_or_reload(repo_or_dir, force_reload, trust_repo, "load",
+  File "D:\Softwares\Anaconda\envs\dev\lib\site-packages\torch\hub.py", line 206, in _get_cache_or_reload
+    repo_owner, repo_name, ref = _parse_repo_info(github)
+  File "D:\Softwares\Anaconda\envs\dev\lib\site-packages\torch\hub.py", line 150, in _parse_repo_info
+    with urlopen(f"https://github.com/{repo_owner}/{repo_name}/tree/main/"):
+  File "D:\Softwares\Anaconda\envs\dev\lib\urllib\request.py", line 214, in urlopen
+    return opener.open(url, data, timeout)
+  File "D:\Softwares\Anaconda\envs\dev\lib\urllib\request.py", line 517, in open
+    response = self._open(req, data)
+  File "D:\Softwares\Anaconda\envs\dev\lib\urllib\request.py", line 534, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+  File "D:\Softwares\Anaconda\envs\dev\lib\urllib\request.py", line 494, in _call_chain
+    result = func(*args)
+  File "D:\Softwares\Anaconda\envs\dev\lib\urllib\request.py", line 1389, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+  File "D:\Softwares\Anaconda\envs\dev\lib\urllib\request.py", line 1350, in do_open
+    r = h.getresponse()
+  File "D:\Softwares\Anaconda\envs\dev\lib\http\client.py", line 1377, in getresponse
+    response.begin()
+  File "D:\Softwares\Anaconda\envs\dev\lib\http\client.py", line 320, in begin
+    version, status, reason = self._read_status()
+  File "D:\Softwares\Anaconda\envs\dev\lib\http\client.py", line 289, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+http.client.RemoteDisconnected: Remote end closed connection without response
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 173. Discarding old audio chunks.
+RealTimeSTT: faster_whisper - WARNING - An error occured while synchronizing the model Systran/faster-whisper-base from the Hugging Face Hub:
+(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Systran/faster-whisper-base/revision/main (Caused by SSLError(SSLZeroReturnError(6, 'TLS/SSL connection has been closed (EOF) (_ssl.c:1133)')))"), '(Request ID: 6fa34a0d-012c-44d8-a791-1af025d703b6)')
+RealTimeSTT: faster_whisper - WARNING - Trying to load the model directly from the local cache, if it exists.
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 1073. Discarding old audio chunks.
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 38. Discarding old audio chunks.
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 12. Discarding old audio chunks.
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 12. Discarding old audio chunks.
+RealTimeSTT: root - ERROR - Unhandled exeption in _realtime_worker: max() arg is an empty sequence
+RealTimeSTT: root - WARNING - Audio queue size exceeds latency limit. Current size: 12. Discarding old audio chunks.

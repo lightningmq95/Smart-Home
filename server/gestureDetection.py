@@ -16,6 +16,8 @@ previous_hand_sign = ""
 previous_finger_gesture = ""
 hand_sign_start_time = 0
 finger_gesture_start_time = 0
+last_sent_hand_sign = ""
+last_sent_finger_gesture = ""
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -469,6 +471,8 @@ def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text
     global previous_finger_gesture
     global hand_sign_start_time
     global finger_gesture_start_time
+    global last_sent_hand_sign
+    global last_sent_finger_gesture
 
     cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22), (0, 0, 0), -1)
 
@@ -483,10 +487,11 @@ def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text
 
     current_time = time.time()
 
-    # Print information to the terminal
-    if hand_sign_text != previous_hand_sign and current_time - hand_sign_start_time >= 1.5:
+    # Check if hand sign has been unchanged for 1.5 seconds
+    if hand_sign_text != previous_hand_sign:
         hand_sign_start_time = current_time
         previous_hand_sign = hand_sign_text
+    elif current_time - hand_sign_start_time >= 1 and hand_sign_text != last_sent_hand_sign:
         if hand_sign_text == "Open":
             print("Hand is open")
             gesture_queue.put("open")
@@ -495,17 +500,19 @@ def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text
             gesture_queue.put("close")
         else:
             print("Hand is in an unknown state")
-        # previous_hand_sign = hand_sign_text
+        last_sent_hand_sign = hand_sign_text
 
-    if finger_gesture_text != previous_finger_gesture and current_time - finger_gesture_start_time >= 1.5:
+    # Check if finger gesture has been unchanged for 1 seconds
+    if finger_gesture_text != previous_finger_gesture:
         finger_gesture_start_time = current_time
         previous_finger_gesture = finger_gesture_text
+    elif current_time - finger_gesture_start_time >= 1 and finger_gesture_text != last_sent_finger_gesture:
         print(f"Finger gesture: {finger_gesture_text}")
         if finger_gesture_text == "Clockwise":
             gesture_queue.put("clockwise")
         elif finger_gesture_text == "Counter Clockwise":
             gesture_queue.put("counterclockwise")
-        # previous_finger_gesture = finger_gesture_text
+        last_sent_finger_gesture = finger_gesture_text
 
     return image
 

@@ -14,6 +14,7 @@ import time
 import fuzzy
 import Levenshtein
 import pyttsx3
+import sys
 
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
@@ -190,6 +191,7 @@ def sendImg(img):
         result = response.json()
         if result['name'] == "Unknown":
             print("Face is unknown. Please register your face.")
+            sys.exit(1)
         else:
             print(f"Name: {result['name']}, Role: {result['role']}, Distance: {result['distance']}")
     else:
@@ -200,9 +202,10 @@ def run_gesture_detection():
     gestureDetection.main(gesture_queue, stop_gesture_event)
 
 def start_gesture_detection():
-    global gesture_detection_active, gesture_detection_thread
+    global gesture_detection_active, gesture_detection_thread, stop_gesture_event
     if not gesture_detection_active:
         gesture_detection_active = True
+        stop_gesture_event.clear()  # Reset the stop event
         gesture_detection_thread = threading.Thread(target=run_gesture_detection)
         gesture_detection_thread.start()
         print("Gesture detection started.")

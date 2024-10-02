@@ -140,51 +140,6 @@ async def register_user(
     train_model()
     return {"message": "User registered successfully"}
 
-# @app.post("/face_match")
-# async def face_match(image: UploadFile = File(...)):
-#     contents = await image.read()
-#     nparr = np.frombuffer(contents, np.uint8)
-#     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-#     # Convert the captured frame to a PIL image
-#     img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    
-#     # Path to the data file
-#     data_path = 'data.pt'
-    
-#     # getting embedding matrix of the given img
-#     face, prob = mtcnn(img, return_prob=True)  # returns cropped face and probability
-#     if face is None or prob <= 0.90:
-#         return {"name": "No face detected", "distance": None}
-
-#     emb = resnet(face.unsqueeze(0)).detach()  # detech is to make required gradient false
-
-#     saved_data = torch.load(data_path)  # loading data.pt file
-#     embedding_list = saved_data[0]  # getting embedding data
-#     name_list = saved_data[1]  # getting list of names
-
-#     dist_list = []  # list of matched distances, minimum distance is used to identify the person
-
-#     for idx, emb_db in enumerate(embedding_list):
-#         dist = torch.dist(emb, emb_db).item()
-#         dist_list.append(dist)
-
-#     idx_min = dist_list.index(min(dist_list))
-#     min_dist = min(dist_list)
-#     name = name_list[idx_min]
-
-#     with open('users.json', 'r') as f:
-#         users = [json.loads(line) for line in f]
-#     for user in users:
-#         if user['name'] == name:
-#             role = user['role']
-#             break
-    
-#     if min_dist > 0.8:
-#         return {"name": "Unknown", "distance": min_dist}
-#     else:
-#         return {"name": name, "role": role , "distance": min_dist}
-
 @app.post("/face_match")
 async def face_match(image: UploadFile = File(...)):
     try:
