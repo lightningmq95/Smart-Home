@@ -187,4 +187,5 @@ async def face_match(image: UploadFile = File(...)):
             return {"name": name, "role": role, "distance": min_dist}
     
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=str(e))
