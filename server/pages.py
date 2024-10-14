@@ -340,7 +340,8 @@ def process_gesture(gesture):
     #     st.error(f"Error processing gesture '{gesture}': {e}")
 
 def STT():
-    st.write("Initializing")
+    placeholder = st.empty()
+    placeholder.write("Initializing")
     colorama.init()
 
     global full_sentences, displayed_text, processed_text, last_input_time, recorder
@@ -365,9 +366,10 @@ def STT():
         'silero_deactivity_detection': True,
     }
 
+    clear_console()
     recorder = AudioToTextRecorder(**recorder_config)
 
-    st.text(body=st.session_state.gemini_response)
+    st.session_state.gemini_response = ""
 
     gesture_processing_thread = threading.Thread(target=process_gestures)
     gesture_processing_thread.daemon = True
@@ -384,6 +386,12 @@ def STT():
         
         if full_sentences:
             last_input_time = current_time
+
+        with placeholder.container():
+            st.write(displayed_text)
+            if st.session_state.gemini_response:
+                st.write("\nGemini Response:")
+                st.write(st.session_state.gemini_response)
 
 def integrated_page():
     st.title("Integrated Page")
