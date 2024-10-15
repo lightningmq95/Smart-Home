@@ -1,36 +1,19 @@
-#include <Arduino.h>
-
-/* ESP32 HTTP IoT Server Example for Wokwi.com
-
-  https://wokwi.com/arduino/projects/320964045035274834
-
-  When running it on Wokwi for VSCode, you can connect to the
-  simulated ESP32 server by opening http://localhost:8180
-  in your browser. This is configured by wokwi.toml.
-*/
-
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <uri/UriBraces.h>
+#include <ESP8266WiFi.h>
 
 // Define motor and LED control pins
 const int motorPin1 = 5;  // Motor IN1 connected to GPIO 5
 const int motorPin2 = 4;  // Motor IN2 connected to GPIO 4
 const int enablePin = 14; // Motor EN connected to GPIO 14
-const int ledPin = 2;     // LED connected to GPIO 12
-
-// PWM channel, frequency, and resolution
-const int pwmChannel = 0;
-const int pwmFreq = 5000;
-const int pwmResolution = 8;
+const int ledPin = 2;     // LED connected to GPIO 2 (not 12)
 
 // Wi-Fi credentials
-const char *ssid = "Wokwi-GUEST";
-const char *password = "";
+const char *ssid = "MITWPU-GUEST";
+const char *password = "Wpuguest@9192";
+const uint16_t port = 8002;
+const char *host = "10.20.16.47";
 
 // Web server on port 80
-WiFiServer server(80);
+WiFiServer server(port);
 
 // Current motor speed state
 float currentSpeed = 0.0;
@@ -38,7 +21,7 @@ float currentSpeed = 0.0;
 void setup()
 {
   // Initialize serial communication
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   // Set motor and LED control pins as outputs
   pinMode(motorPin1, OUTPUT);
@@ -46,23 +29,24 @@ void setup()
   pinMode(enablePin, OUTPUT);
   pinMode(ledPin, OUTPUT);
 
-  // Configure PWM channel
-  ledcSetup(pwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(motorPin1, pwmChannel);
+  Serial.print("Connecting to: ");
+  Serial.println(ssid);
 
-  // Connect to Wi-Fi
   WiFi.begin(ssid, password);
+  int attempts = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
-    Serial.print(".");
+    Serial.println("...");
+    attempts++;
+    if (attempts > 3)
+    {
+      ESP.restart();
+    }
   }
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
+  Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
 
-  // Start the server
   server.begin();
 }
 
@@ -101,7 +85,7 @@ void loop()
       }
       speedString.trim(); // Remove any leading/trailing whitespace
       Serial.println("Parsed speedString: '" + speedString + "'");
-      // Adjust motor speed based on the received value
+
       // Adjust motor speed based on the received value
       if (speedString == "1")
       {
@@ -135,12 +119,10 @@ void loop()
       // Map the speed value (0.0 to 1.0) to PWM range (0 to 255)
       int pwmValue = int(currentSpeed * 255);
 
-      // // Set motor direction and speed
-      // digitalWrite(motorPin1, HIGH); // Set direction
-      // digitalWrite(motorPin2, LOW);  // Set direction
-      // analogWrite(enablePin, pwmValue);
-      // analogWrite(motorPin1, pwmValue);
-      ledcWrite(pwmChannel, pwmValue);
+      // Set motor direction and speed
+      digitalWrite(motorPin1, HIGH); // Set direction
+      digitalWrite(motorPin2, LOW);  // Set direction
+      analogWrite(enablePin, pwmValue);
 
       Serial.print("Motor speed set to: ");
       Serial.println(currentSpeed * 100); // Show as percentage
@@ -151,7 +133,7 @@ void loop()
     client.print("<!DOCTYPE HTML>\r\n<html>\r\n");
     client.print("<h1>ESP8266 Motor and LED Control</h1>");
     client.print("<p>Control the motor speed by appending '?MOTOR=1' for max speed, '?MOTOR=0' for off, '?MOTOR=FASTER' to increase speed, or '?MOTOR=SLOWER' to decrease speed</p>");
-    client.print("<p>Control the LED by appending '/LED=ON' or '/LED=OFF' to the URL</p>");
+    client.print("<p>Control the LED by appending '/LED=1' or '/LED=0' to the URL</p>");
     client.print("</html>\n");
     delay(1);
     Serial.println("Client disconnected");
