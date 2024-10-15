@@ -1,26 +1,24 @@
 #include <ESP8266WiFi.h>
 
 // Define motor and LED control pins
-const int motorPin1 = 5;  // Motor IN1 connected to GPIO 5
-const int motorPin2 = 4;  // Motor IN2 connected to GPIO 4
-const int enablePin = 14; // Motor EN connected to GPIO 14
-const int ledPin = 2;     // LED connected to GPIO 2 (not 12)
+const int motorPin1 = 12;  // Motor IN1 connected to GPIO 5
+const int motorPin2 = 13;  // Motor IN2 connected to GPIO 4
+const int enablePin = 14;  // Motor EN connected to GPIO 14
+const int ledPin = 2;      // LED connected to GPIO 2 (not 12)
 
 // Wi-Fi credentials
-const char *ssid = "DEVASTATINGRPG";
-const char *password = "beansbestcat";
+const char *ssid = "Akash";
+const char *password = "Akash@3010";
 const uint16_t port = 8002;
-const char* host = "192.168.137.148";
+const char *host = "192.168.1.6";
 
 // Web server on port 80
 WiFiServer server(port);
-// WifiClient client;
 
 // Current motor speed state
 float currentSpeed = 0.0;
 
-void setup()
-{
+void setup() {
   // Initialize serial communication
   Serial.begin(9600);
 
@@ -38,10 +36,10 @@ void setup()
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.println("...");
-    attempts++;
-    if (attempts > 3) {
-      ESP.restart();
-    }
+    // attempts++;
+    // if (attempts > 10) {
+    //   ESP.restart();
+    // }
   }
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
@@ -52,65 +50,50 @@ void setup()
 void loop() {
   // Check if a client has connected
   WiFiClient client = server.available();
-  if (client)
-  {
+  if (client) {
     Serial.println("New Client connected");
     String request = client.readStringUntil('\r');
     Serial.println("Request: " + request);
     client.flush();
 
     // Handle LED control
-    if (request.indexOf("/LED=1") != -1)
-    {
+    if (request.indexOf("/LED=1") != -1) {
       digitalWrite(ledPin, HIGH);
       Serial.println("LED is ON");
-    }
-    else if (request.indexOf("/LED=0") != -1)
-    {
+    } else if (request.indexOf("/LED=0") != -1) {
       digitalWrite(ledPin, LOW);
       Serial.println("LED is OFF");
     }
 
     // Parse the motor speed value from the request
-    if (request.indexOf("MOTOR=") != -1)
-    {
+    if (request.indexOf("MOTOR=") != -1) {
       int index = request.indexOf("MOTOR=") + 6;
       String speedString = request.substring(index);
       int endIndex = speedString.indexOf(' ');
-      if (endIndex != -1)
-      {
+      if (endIndex != -1) {
         speedString = speedString.substring(0, endIndex);
       }
-      speedString.trim(); // Remove any leading/trailing whitespace
+      speedString.trim();  // Remove any leading/trailing whitespace
       Serial.println("Parsed speedString: '" + speedString + "'");
 
       // Adjust motor speed based on the received value
-      if (speedString == "1")
-      {
-        currentSpeed = 1.0; // Max speed
+      if (speedString == "1") {
+        currentSpeed = 1.0;  // Max speed
         Serial.println("Setting motor speed to max (1.0)");
-      }
-      else if (speedString == "0")
-      {
-        currentSpeed = 0.0; // Motor off
+      } else if (speedString == "0") {
+        currentSpeed = 0.0;  // Motor off
         Serial.println("Turning motor off (0.0)");
-      }
-      else if (speedString == "FASTER")
-      {
-        currentSpeed += 0.2; // Increase speed
+      } else if (speedString == "FASTER") {
+        currentSpeed += 0.2;  // Increase speed
         if (currentSpeed > 1.0)
-          currentSpeed = 1.0; // Clamp to max speed
+          currentSpeed = 1.0;  // Clamp to max speed
         Serial.println("Increasing motor speed");
-      }
-      else if (speedString == "SLOWER")
-      {
-        currentSpeed -= 0.2; // Decrease speed
+      } else if (speedString == "SLOWER") {
+        currentSpeed -= 0.2;  // Decrease speed
         if (currentSpeed < 0.0)
-          currentSpeed = 0.0; // Clamp to min speed
+          currentSpeed = 0.0;  // Clamp to min speed
         Serial.println("Decreasing motor speed");
-      }
-      else
-      {
+      } else {
         Serial.println("Invalid motor speed command");
       }
 
@@ -118,12 +101,12 @@ void loop() {
       int pwmValue = int(currentSpeed * 255);
 
       // Set motor direction and speed
-      digitalWrite(motorPin1, HIGH); // Set direction
-      digitalWrite(motorPin2, LOW);  // Set direction
+      digitalWrite(motorPin1, HIGH);  // Set direction
+      digitalWrite(motorPin2, LOW);   // Set direction
       analogWrite(enablePin, pwmValue);
 
       Serial.print("Motor speed set to: ");
-      Serial.println(currentSpeed * 100); // Show as percentage
+      Serial.println(currentSpeed * 100);  // Show as percentage
     }
 
     // Send an HTTP response to the client

@@ -18,12 +18,12 @@ import sys
 
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
-urlLedOn = "http://localhost:8180/LED=1"
-urlLedOff = "http://localhost:8180/LED=0"
-urlMotorOn = "http://localhost:8180/MOTOR=1"
-urlMotorOff = "http://localhost:8180/MOTOR=0"
-urlMotorFast = "http://localhost:8180/MOTOR=FASTER"
-urlMotorSlow = "http://localhost:8180/MOTOR=SLOWER"
+urlLedOn = "http://192.168.1.7:8002/LED=1"
+urlLedOff = "http://192.168.1.7:8002/LED=0"
+urlMotorOn = "http://192.168.1.7:8002/MOTOR=1"
+urlMotorOff = "http://192.168.1.7:8002/MOTOR=0"
+urlMotorFast = "http://192.168.1.7:8002/MOTOR=FASTER"
+urlMotorSlow = "http://192.168.1.7:8002/MOTOR=SLOWER"
 
 # Gemini API configuration
 API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"

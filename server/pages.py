@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import requests
 
+response_text = ''
+
 def go_next(view):
     if view == "front":
         st.session_state.front_view = st.session_state["front_view_input"]
@@ -146,12 +148,12 @@ import google.generativeai as genai
 
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
-urlLedOn = "http://localhost:8180/LED=1"
-urlLedOff = "http://localhost:8180/LED=0"
-urlMotorOn = "http://localhost:8180/MOTOR=1"
-urlMotorOff = "http://localhost:8180/MOTOR=0"
-urlMotorFast = "http://localhost:8180/MOTOR=FASTER"
-urlMotorSlow = "http://localhost:8180/MOTOR=SLOW"
+urlLedOn = "http://192.168.1.7:8002/LED=1"
+urlLedOff = "http://192.168.1.7:8002/LED=0"
+urlMotorOn = "http://192.168.1.7:8002/MOTOR=1"
+urlMotorOff = "http://192.168.1.7:8002/MOTOR=0"
+urlMotorFast = "http://192.168.1.7:8002/MOTOR=FASTER"
+urlMotorSlow = "http://192.168.1.7:8002/MOTOR=SLOWER"
 
 # Gemini API configuration
 API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"
@@ -211,12 +213,12 @@ def text_detected(text):
 
     if new_text != displayed_text:
         displayed_text = new_text
-        # clear_console()
+        clear_console()
         print(f"Language: {recorder.detected_language} (realtime: {recorder.detected_realtime_language})")
         print(displayed_text, end="", flush=True)
 
 def process_text(text):
-    global processed_text, gesture_detection_active
+    global processed_text, gesture_detection_active, response_text
     if text not in processed_text:
         full_sentences.append(text)
         processed_text.add(text)
@@ -225,7 +227,7 @@ def process_text(text):
         closest_command, distance = find_closest_command(text)
         threshold = 10  
         min_length = 9
-        max_length = 50  
+        max_length = 50 
 
         if distance <= threshold and min_length <= len(text) <= max_length:
             if closest_command == "jarvis gestures on":
@@ -251,16 +253,18 @@ def process_text(text):
             response = model.generate_content(prompt)
             print("\nGemini Response:")
             print(Fore.GREEN + response.text + Style.RESET_ALL)
+            st.write(response.text)
             
             # Store the response in session state
             st.session_state.gemini_response = response.text
-
+            response_text = response.text
+            st.rerun()
             engine = pyttsx3.init()
             engine.say(response.text)
             engine.runAndWait()
             
         except Exception as e:
-            print(f"\nError: {str(e)}")
+            print(f"\nError: {e}")
 
 def keyword_detected(text):
     return "jarvis" in text.lower()
@@ -320,28 +324,28 @@ def process_gestures():
             pass
 
 def process_gesture(gesture):
-    pass
-    # try:
-    #     if gesture == "open":
-    #         requests.get(urlLedOn)
-    #         requests.get(urlMotorOn)
-    #         st.success("LED and Motor turned on")
-    #     elif gesture == "close":
-    #         requests.get(urlLedOff)
-    #         requests.get(urlMotorOff)
-    #         st.success("LED and Motor turned off")
-    #     elif gesture == "clockwise":
-    #         requests.get(urlMotorFast)
-    #         st.success("Motor speed increased")
-    #     elif gesture == "counterclockwise":
-    #         requests.get(urlMotorSlow)
-    #         st.success("Motor speed decreased")
-    # except requests.exceptions.RequestException as e:
-    #     st.error(f"Error processing gesture '{gesture}': {e}")
+    try:
+        if gesture == "open":
+            requests.get(urlLedOn)
+            requests.get(urlMotorOn)
+            print("LED and Motor turned on")
+        elif gesture == "close":
+            requests.get(urlLedOff)
+            requests.get(urlMotorOff)
+            print("LED and Motor turned off")
+        elif gesture == "clockwise":
+            requests.get(urlMotorFast)
+            print("Motor speed increased")
+        elif gesture == "counterclockwise":
+            requests.get(urlMotorSlow)
+            print("Motor speed decreased")
+    except requests.exceptions.RequestException as e:
+        print(f"Error processing gesture '{gesture}': {e}")
 
 def STT():
     placeholder = st.empty()
     placeholder.write("Initializing")
+    print("Initializing")
     colorama.init()
 
     global full_sentences, displayed_text, processed_text, last_input_time, recorder
@@ -366,14 +370,14 @@ def STT():
         'silero_deactivity_detection': True,
     }
 
-    clear_console()
     recorder = AudioToTextRecorder(**recorder_config)
+    clear_console()
 
     st.session_state.gemini_response = ""
 
     gesture_processing_thread = threading.Thread(target=process_gestures)
     gesture_processing_thread.daemon = True
-    # gesture_processing_thread.start()
+    gesture_processing_thread.start()
 
     while True:
         current_time = time.time()
@@ -389,9 +393,10 @@ def STT():
 
         with placeholder.container():
             st.write(displayed_text)
-            if st.session_state.gemini_response:
+            global response_text
+            if response_text:
                 st.write("\nGemini Response:")
-                st.write(st.session_state.gemini_response)
+                st.write(response_text)
 
 def integrated_page():
     st.title("Integrated Page")
@@ -417,6 +422,3 @@ def integrated_page():
                 stop_gesture_event.set()
                 if gesture_detection_thread:
                     gesture_detection_thread.join()
-
-
-
