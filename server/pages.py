@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import requests
 
+response_text = ''
+
 def go_next(view):
     if view == "front":
         st.session_state.front_view = st.session_state["front_view_input"]
@@ -215,8 +217,8 @@ def text_detected(text):
         print(f"Language: {recorder.detected_language} (realtime: {recorder.detected_realtime_language})")
         print(displayed_text, end="", flush=True)
 
-def process_text(text):
-    global processed_text, gesture_detection_active
+def process_text(text, placeholder):
+    global processed_text, gesture_detection_active, response_text
     if text not in processed_text:
         full_sentences.append(text)
         processed_text.add(text)
@@ -251,16 +253,18 @@ def process_text(text):
             response = model.generate_content(prompt)
             print("\nGemini Response:")
             print(Fore.GREEN + response.text + Style.RESET_ALL)
+            st.write(response.text)
             
             # Store the response in session state
             st.session_state.gemini_response = response.text
-
+            response_text = response.text
+            st.rerun()
             engine = pyttsx3.init()
             engine.say(response.text)
             engine.runAndWait()
             
         except Exception as e:
-            print(f"\nError: {str(e)}")
+            print(f"\nError: {e}")
 
 def keyword_detected(text):
     return "jarvis" in text.lower()
@@ -379,19 +383,21 @@ def STT():
         current_time = time.time()
         
         if current_time - last_input_time > 2 and full_sentences:
-            process_text(" ".join(full_sentences))
+            process_text(" ".join(full_sentences), placeholder)
             full_sentences.clear()
         
-        recorder.text(lambda text: process_text(text) if keyword_detected(text) else None)
+        recorder.text(lambda text: process_text(text, placeholder) if keyword_detected(text) else None)
         
         if full_sentences:
             last_input_time = current_time
 
         with placeholder.container():
             st.write(displayed_text)
-            if st.session_state.gemini_response:
+            st.write("ola")
+            global response_text
+            if response_text:
                 st.write("\nGemini Response:")
-                st.write(st.session_state.gemini_response)
+                st.write(response_text)
 
 def integrated_page():
     st.title("Integrated Page")
@@ -407,16 +413,16 @@ def integrated_page():
         img_pil = Image.open(img)
 
         # Send the image for face matching
-        verified = sendImg(img_pil)
-        if verified:
-            try:
-                STT()
-            except KeyboardInterrupt:
-                st.write("Interrupted by user")
-            finally:
-                stop_gesture_event.set()
-                if gesture_detection_thread:
-                    gesture_detection_thread.join()
+        # verified = sendImg(img_pil)
+        # if verified:
+    try:
+        STT()
+    except KeyboardInterrupt:
+        st.write("Interrupted by user")
+    finally:
+        stop_gesture_event.set()
+        if gesture_detection_thread:
+            gesture_detection_thread.join()
 
 
 
