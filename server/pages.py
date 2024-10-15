@@ -413,16 +413,16 @@ def integrated_page():
         img_pil = Image.open(img)
 
         # Send the image for face matching
-        # verified = sendImg(img_pil)
-        # if verified:
-    try:
-        STT()
-    except KeyboardInterrupt:
-        st.write("Interrupted by user")
-    finally:
-        stop_gesture_event.set()
-        if gesture_detection_thread:
-            gesture_detection_thread.join()
+        verified = sendImg(img_pil)
+        if verified:
+            try:
+                STT()
+            except KeyboardInterrupt:
+                st.write("Interrupted by user")
+            finally:
+                stop_gesture_event.set()
+                if gesture_detection_thread:
+                    gesture_detection_thread.join()
 
 
 
