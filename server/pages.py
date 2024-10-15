@@ -383,10 +383,10 @@ def STT():
         current_time = time.time()
         
         if current_time - last_input_time > 2 and full_sentences:
-            process_text(" ".join(full_sentences))
+            process_text(" ".join(full_sentences), placeholder)
             full_sentences.clear()
         
-        recorder.text(lambda text: process_text(text) if keyword_detected(text) else None)
+        recorder.text(lambda text: process_text(text, placeholder) if keyword_detected(text) else None)
         
         if full_sentences:
             last_input_time = current_time
