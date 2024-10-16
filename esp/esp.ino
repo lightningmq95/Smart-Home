@@ -7,10 +7,10 @@ const int enablePin = 14;  // Motor EN connected to GPIO 14
 const int ledPin = 2;      // LED connected to GPIO 2 (not 12)
 
 // Wi-Fi credentials
-const char *ssid = "Akash";
-const char *password = "Akash@3010";
+const char *ssid = "MITWPU-GUEST";
+const char *password = "Wpuguest@9192";
 const uint16_t port = 8002;
-const char *host = "192.168.1.6";
+const char *host = "10.20.19.240";
 
 // Web server on port 80
 WiFiServer server(port);
@@ -43,7 +43,7 @@ void setup() {
   }
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
-
+  client.print(WiFi.localIP());
   server.begin();
 }
 

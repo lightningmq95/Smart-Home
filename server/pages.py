@@ -148,12 +148,12 @@ import google.generativeai as genai
 
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
-urlLedOn = "http://192.168.1.7:8002/LED=1"
-urlLedOff = "http://192.168.1.7:8002/LED=0"
-urlMotorOn = "http://192.168.1.7:8002/MOTOR=1"
-urlMotorOff = "http://192.168.1.7:8002/MOTOR=0"
-urlMotorFast = "http://192.168.1.7:8002/MOTOR=FASTER"
-urlMotorSlow = "http://192.168.1.7:8002/MOTOR=SLOWER"
+urlLedOn = "http://10.20.19.173:8002/LED=1"
+urlLedOff = "http://10.20.19.173:8002/LED=0"
+urlMotorOn = "http://10.20.19.173:8002/MOTOR=1"
+urlMotorOff = "http://10.20.19.173:8002/MOTOR=0"
+urlMotorFast = "http://10.20.19.173:8002/MOTOR=FASTER"
+urlMotorSlow = "http://10.20.19.173:8002/MOTOR=SLOWER"
 
 # Gemini API configuration
 API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"
@@ -236,6 +236,8 @@ def process_text(text):
                 stop_gesture_detection()
             st.write(closest_command)
             print(closest_command)
+            response_text = closest_command
+            st.rerun()
             url = command_urls.get(closest_command)
             if url:
                 try:
@@ -383,10 +385,10 @@ def STT():
         current_time = time.time()
         
         if current_time - last_input_time > 2 and full_sentences:
-            process_text(" ".join(full_sentences), placeholder)
+            process_text(" ".join(full_sentences))
             full_sentences.clear()
         
-        recorder.text(lambda text: process_text(text, placeholder) if keyword_detected(text) else None)
+        recorder.text(lambda text: process_text(text) if keyword_detected(text) else None)
         
         if full_sentences:
             last_input_time = current_time
