@@ -209,6 +209,7 @@ def text_detected(text):
         f"{Fore.YELLOW + sentence + Style.RESET_ALL if i % 2 == 0 else Fore.CYAN + sentence + Style.RESET_ALL} "
         for i, sentence in enumerate(full_sentences)
     ]
+    sentences_with_style = full_sentences
     new_text = "".join(sentences_with_style).strip() + " " + text if len(sentences_with_style) > 0 else text
 
     if new_text != displayed_text:
