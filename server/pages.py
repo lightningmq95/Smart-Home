@@ -139,6 +139,7 @@ import threading
 import queue
 import time
 import pyttsx3
+from concurrent.futures import ThreadPoolExecutor
 import fuzzy
 import Levenshtein
 import colorama
@@ -182,6 +183,8 @@ stop_gesture_event = threading.Event()
 gesture_detection_active = False
 gesture_detection_thread = None
 
+executor = ThreadPoolExecutor(max_workers=5)
+
 def find_closest_command(recognized_text):
     recognized_soundex = soundex(recognized_text.lower())
     potential_commands = [command for command in commands if soundex(command) == recognized_soundex]
@@ -209,10 +212,12 @@ def text_detected(text):
         f"{Fore.YELLOW + sentence + Style.RESET_ALL if i % 2 == 0 else Fore.CYAN + sentence + Style.RESET_ALL} "
         for i, sentence in enumerate(full_sentences)
     ]
+    sentences_with_style = full_sentences
     new_text = "".join(sentences_with_style).strip() + " " + text if len(sentences_with_style) > 0 else text
-
+    # new_text = full_sentences
     if new_text != displayed_text:
-        displayed_text = new_text
+        if keyword_detected(new_text):
+            displayed_text = new_text
         clear_console()
         print(f"Language: {recorder.detected_language} (realtime: {recorder.detected_realtime_language})")
         print(displayed_text, end="", flush=True)
@@ -261,15 +266,21 @@ def process_text(text):
             st.session_state.gemini_response = response.text
             response_text = response.text
             st.rerun()
-            engine = pyttsx3.init()
-            engine.say(response.text)
-            engine.runAndWait()
+            # Run the text-to-speech in a separate thread
+            # tts_thread = threading.Thread(target=speak_text, args=(response.text,))
+            # tts_thread.start()
+            executor.submit(speak_text, response.text)
             
         except Exception as e:
             print(f"\nError: {e}")
 
 def keyword_detected(text):
     return "jarvis" in text.lower()
+
+def speak_text(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
 def sendImg(img):
     if img is None:
@@ -415,12 +426,12 @@ def integrated_page():
 
         # Send the image for face matching
         verified = sendImg(img_pil)
-        if verified:
-            try:
-                STT()
-            except KeyboardInterrupt:
-                st.write("Interrupted by user")
-            finally:
-                stop_gesture_event.set()
-                if gesture_detection_thread:
-                    gesture_detection_thread.join()
+        # if verified:
+    try:
+        STT()
+    except KeyboardInterrupt:
+        st.write("Interrupted by user")
+    finally:
+        stop_gesture_event.set()
+        if gesture_detection_thread:
+            gesture_detection_thread.join()
