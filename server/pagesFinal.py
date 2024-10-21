@@ -131,7 +131,7 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 soundex = fuzzy.Soundex(4)
 
-commands = ["Jarvis", "jarvis lights on", "jarvis lights off", "jarvis fan faster", "jarvis fan slower", "jarvis fan on", "jarvis fan off", "jarvis gestures on", "jarvis gestures off"]
+commands = ["jarvis", "jarvis lights on", "jarvis lights off", "jarvis fan faster", "jarvis fan slower", "jarvis fan on", "jarvis fan off", "jarvis gestures on", "jarvis gestures off"]
 
 command_urls = {
     "jarvis lights on": urlLedOn,
@@ -245,11 +245,29 @@ def text_detected(text):
         rich_text_stored = rich_text
 
 def process_text(text):
-    global processed_text, gesture_detection_active, response_text, should_clear_console
+    global processed_text, gesture_detection_active, response_text, should_clear_console, displayed_text
     if text not in processed_text:
-        full_sentences.append(text)
-        processed_text.add(text)
-        text_detected("")
+        # Check if the text contains "Jarvis" followed by something
+        if keyword_detected(text):
+            # Extract the part of the text starting with "Jarvis"
+            jarvis_index = text.lower().find("jarvis")
+            text = text[jarvis_index:]
+            
+            # Reset the full_sentences and processed_text
+            full_sentences.clear()
+            processed_text.clear()
+            
+            # Only keep the new command starting with "Jarvis"
+            full_sentences.append(text)
+            processed_text.add(text)
+            should_clear_console = True
+        else:
+            full_sentences.append(text)
+            processed_text.add(text)
+        
+        # Update the displayed text to only show the relevant part
+        displayed_text = text
+        text_detected(text)
 
         closest_command, distance = find_closest_command(text)
         threshold = 10  
@@ -356,7 +374,7 @@ def STT():
     print("Initializing")
     colorama.init()
 
-    global full_sentences, displayed_text, processed_text, last_input_time, recorder
+    global full_sentences, displayed_text, processed_text, last_input_time, recorder, text
 
     full_sentences = []
     displayed_text = ""

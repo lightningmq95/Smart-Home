@@ -14,6 +14,7 @@ const char *host = "10.20.19.240";
 
 // Web server on port 80
 WiFiServer server(port);
+WiFiClient client; // Declare the client object
 
 // Current motor speed state
 float currentSpeed = 0.0;
