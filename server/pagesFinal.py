@@ -17,6 +17,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.text import Text
 from rich.panel import Panel
+from dotenv import load_dotenv
 
 response_text = ''
 
@@ -115,17 +116,21 @@ def add_user(on_click):
         if st.session_state.images_ready:
             st.button("Submit Images", on_click=submit_images)
 
+url = "10.20.63.81"
+
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
-urlLedOn = "http://10.20.19.173:8002/LED=1"
-urlLedOff = "http://10.20.19.173:8002/LED=0"
-urlMotorOn = "http://10.20.19.173:8002/MOTOR=1"
-urlMotorOff = "http://10.20.19.173:8002/MOTOR=0"
-urlMotorFast = "http://10.20.19.173:8002/MOTOR=FASTER"
-urlMotorSlow = "http://10.20.19.173:8002/MOTORLOWER"
+urlLedOn = f"http://{url}:8002/LED=1"
+urlLedOff = f"http://{url}:8002/LED=0"
+urlMotorOn = f"http://{url}:8002/MOTOR=1"
+urlMotorOff = f"http://{url}:8002/MOTOR=0"
+urlMotorFast = f"http://{url}:8002/MOTOR=FASTER"
+urlMotorSlow = f"http://{url}:8002/MOTORLOWER"
+
+load_dotenv()
 
 # Gemini API
-API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"
+API_KEY = os.getenv("API_KEY")
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -387,7 +392,7 @@ def STT():
         'realtime_model_type': 'tiny.en',
         'language': 'en',
         'silero_sensitivity': 0.05,
-        'webrtc_sensitivity': 3,
+        'webrtc_sensitivity': 2,
         'post_speech_silence_duration': unknown_sentence_detection_pause,
         'min_length_of_recording': 1.1,        
         'min_gap_between_recordings': 0,                

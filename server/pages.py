@@ -145,6 +145,7 @@ import colorama
 from colorama import Fore, Style
 from RealtimeSTT import AudioToTextRecorder
 import google.generativeai as genai
+from dotenv import load_dotenv
 
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
@@ -155,8 +156,10 @@ urlMotorOff = "http://10.20.19.173:8002/MOTOR=0"
 urlMotorFast = "http://10.20.19.173:8002/MOTOR=FASTER"
 urlMotorSlow = "http://10.20.19.173:8002/MOTOR=SLOWER"
 
+load_dotenv()
+
 # Gemini API configuration
-API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"
+API_KEY = os.getenv("API_KEY")
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 

@@ -15,6 +15,7 @@ import fuzzy
 import Levenshtein
 import pyttsx3
 import sys
+from dotenv import load_dotenv
 
 # URLs for controlling devices
 urlFacematch = "http://127.0.0.1:8000/face_match"
@@ -26,7 +27,8 @@ urlMotorFast = "http://192.168.1.7:8002/MOTOR=FASTER"
 urlMotorSlow = "http://192.168.1.7:8002/MOTOR=SLOWER"
 
 # Gemini API configuration
-API_KEY = "AIzaSyBJ2cMXQFnuyR5wbj5STTBWF124i91mxeI"
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
